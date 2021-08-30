@@ -62,6 +62,10 @@ class MakeDataSet(data.Dataset):
 
         sub_root = sorted(glob.glob(os.path.join(self.root, "*/*/*.png")))
         sub_root = [path for path in sub_root if label_ not in path and subject in path]
+        if sub_root is False:
+            sub_root = [path for path in sub_root if label_ not in path]
+
+        
         file = sample(sub_root, 1)[0]
         trg_emo = file.split("/")[-2]
         face_target = cv2.imread(file, cv2.IMREAD_COLOR) / 255
