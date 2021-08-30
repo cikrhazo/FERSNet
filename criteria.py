@@ -48,6 +48,7 @@ class rec_criterion(nn.Module):
             param.requires_grad = False
         self.feature_dis = nn.MSELoss()
         self.image_dis = nn.L1Loss()
+#         self.image_dis = nn.MSELoss()
 
     def forward(self, output, target):
         if output.size(1) == 3:
