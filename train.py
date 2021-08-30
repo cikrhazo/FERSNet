@@ -52,6 +52,12 @@ def main(args):
     logger.info(f"batch size {batch_size}")
 
     torch.cuda.set_device(device)
+    
+    TrainSet = MakeDataSet(root=args.train_root, train=True, out_size=img_size, fold=fold)
+    TrainLoader = data.DataLoader(TrainSet, batch_size=batch_size, shuffle=True, pin_memory=False, num_workers=4)
+    ValidSet = MakeDataSet(root=args.train_root, train=False, out_size=img_size, fold=fold)
+    ValidLoader = data.DataLoader(ValidSet, batch_size=6, shuffle=False, pin_memory=False, num_workers=2)
+    iters = int(TrainSet.__len__() / batch_size * (epoch - beginner))
 
     net = FERSNet(vgg_name='VGG13', num_class=num_class, mem_size=mem_size, k_channel=img_ch)
     if args.load_checkpoint:
@@ -72,6 +78,9 @@ def main(args):
     optimizer_C = optim.Adam(net.parameters(), weight_decay=weight_decay, betas=(0.5, 0.999), lr=lr)
     scheduler_C = optim.lr_scheduler.MultiStepLR(optimizer_C, milestones=[int(e) for e in args.milestones.split(',')],
                                                  gamma=args.gamma)
+    
+#     scheduler_C = optim.lr_scheduler.CosineAnnealingLR(optimizer_C, eta_min=1e-5,
+#                                                        T_max=int(TrainSet.__len__() / batch_size * epoch))
 
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
     net.cuda(device=device)
@@ -80,6 +89,9 @@ def main(args):
     optimizer_D = optim.Adam(dis.parameters(), lr=lr, weight_decay=weight_decay, betas=(0.5, 0.999))
     scheduler_D = optim.lr_scheduler.MultiStepLR(optimizer_D, milestones=[int(e) for e in args.milestones.split(',')],
                                                  gamma=args.gamma)
+    
+#     scheduler_D = optim.lr_scheduler.CosineAnnealingLR(optimizer_D, eta_min=1e-5,
+#                                                        T_max=int(TrainSet.__len__() / batch_size * epoch))
 
     dis = torch.nn.DataParallel(dis, device_ids=[0, 1])
     dis.cuda(device=device)
@@ -87,12 +99,7 @@ def main(args):
     loss_fc_cls = cls_criterion().cuda()
     loss_fc_rec = rec_criterion().cuda()
     loss_fc_dcn = dcn_criterion().cuda()
-
-    TrainSet = MakeDataSet(root=args.train_root, train=True, out_size=img_size, fold=fold)
-    TrainLoader = data.DataLoader(TrainSet, batch_size=batch_size, shuffle=True, pin_memory=False, num_workers=4)
-    ValidSet = MakeDataSet(root=args.train_root, train=False, out_size=img_size, fold=fold)
-    ValidLoader = data.DataLoader(ValidSet, batch_size=6, shuffle=False, pin_memory=False, num_workers=2)
-
+    
     print("Testing Subjects: " + ' '.join(TrainSet.subject_list))
     print("# Training Samples: " + str(TrainSet.__len__()))
 
