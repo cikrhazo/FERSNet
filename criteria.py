@@ -36,6 +36,11 @@ class rec_criterion(nn.Module):
         super(rec_criterion, self).__init__()
         self.light_cnn = LightCNN_9Layers()
         checkpoint = torch.load("./LiCNN/LightCNN_9Layers_checkpoint.pth.tar")["state_dict"]
+#         self.light_cnn = LightCNN_29Layers()
+#         checkpoint = torch.load("./LiCNN/LightCNN_29Layers_checkpoint.pth.tar")["state_dict"]
+#         self.light_cnn = LightCNN_29Layers_v2()
+#         checkpoint = torch.load("./LiCNN/LightCNN_29Layers_v2_checkpoint.pth.tar")["state_dict"]
+        
         checkpoint = {k[7:]: v for k, v in checkpoint.items()}
         self.light_cnn.load_state_dict(checkpoint)
         self.light_cnn.eval()
